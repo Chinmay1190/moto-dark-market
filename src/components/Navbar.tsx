@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Sun, Moon, Menu } from "lucide-react";
+import { ShoppingCart, Sun, Moon, Menu, Search } from "lucide-react";
 import { 
   Sheet, 
   SheetContent, 
@@ -16,16 +16,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
   const { totalItems } = useCart();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Shop", href: "/products" },
+    { name: "About", href: "#" },
+    { name: "Contact", href: "#" },
   ];
 
   useEffect(() => {
@@ -45,10 +49,20 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <div className="relative">
-              <span className="font-bold text-2xl font-['Racing_Sans_One'] bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+              <motion.span 
+                className="font-bold text-2xl font-['Racing_Sans_One'] text-gradient"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
                 SuperBikez
-              </span>
-              <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary/60 rounded-full"></span>
+              </motion.span>
+              <motion.span 
+                className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary/60 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              ></motion.span>
             </div>
           </Link>
 
@@ -68,6 +82,34 @@ const Navbar = () => {
           </nav>
 
           <div className="flex items-center gap-4">
+            {/* Search Bar */}
+            <AnimatePresence>
+              {showSearch && (
+                <motion.div 
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 200, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  className="relative hidden md:block"
+                >
+                  <input 
+                    type="text" 
+                    placeholder="Search..." 
+                    className="w-full h-10 px-3 py-2 rounded-full border border-input bg-background"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Search"
+              onClick={() => setShowSearch(prev => !prev)}
+              className="rounded-full"
+            >
+              <Search />
+            </Button>
+
             <Button
               variant="ghost"
               size="icon"
@@ -81,11 +123,18 @@ const Navbar = () => {
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <ShoppingCart />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center animate-scale-in">
-                    {totalItems}
-                  </span>
-                )}
+                <AnimatePresence>
+                  {totalItems > 0 && (
+                    <motion.span 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center"
+                    >
+                      {totalItems}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </Button>
             </Link>
 
@@ -98,6 +147,22 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right">
                 <div className="flex flex-col gap-6 mt-8">
+                  <div className="relative w-fit mx-auto">
+                    <span className="font-bold text-2xl font-['Racing_Sans_One'] text-gradient">
+                      SuperBikez
+                    </span>
+                    <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary/60 rounded-full"></span>
+                  </div>
+                  
+                  <div className="relative mt-4">
+                    <input 
+                      type="text" 
+                      placeholder="Search..." 
+                      className="w-full h-10 px-3 py-2 rounded-full border border-input bg-background"
+                    />
+                    <Search className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  </div>
+                  
                   {navLinks.map((link) => (
                     <Link
                       key={link.name}

@@ -76,4 +76,71 @@
   .bike-shadow {
     @apply after:content-[''] after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-2 after:bg-black/20 after:blur-md after:rounded-full dark:after:bg-white/10;
   }
+  
+  /* New enhanced styles */
+  .shimmer {
+    @apply relative overflow-hidden after:content-[''] after:absolute after:inset-0 after:translate-x-[-100%] after:bg-gradient-to-r after:from-transparent after:via-white/20 after:to-transparent after:animate-[shimmer_2.5s_infinite];
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70;
+  }
+  
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+  
+  .rotating {
+    animation: rotating 10s linear infinite;
+  }
+  
+  .parallax-bg {
+    @apply relative bg-fixed bg-center bg-cover;
+  }
+  
+  .card-3d {
+    @apply transition-transform hover:transform hover:rotate-y-3 hover:-rotate-x-3 hover:shadow-xl;
+  }
+  
+  .button-glow {
+    @apply relative after:absolute after:inset-0 after:rounded-md after:opacity-0 after:transition-opacity after:bg-primary/30 after:blur-xl hover:after:opacity-100;
+  }
+  
+  .text-outline {
+    @apply text-transparent [-webkit-text-stroke:1px_theme(colors.primary)];
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bike-animation {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3) drop-shadow(0 0 15px rgb(229 84 85 / 0.7)); }
 }

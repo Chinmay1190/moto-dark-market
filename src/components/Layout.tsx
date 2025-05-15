@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useEffect } from "react";
 import { useTheme } from "@/context/ThemeContext";
+import BackToTop from "./BackToTop";
 
 const Layout = () => {
   const { theme } = useTheme();
@@ -20,6 +21,7 @@ const Layout = () => {
         <Outlet />
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 };
