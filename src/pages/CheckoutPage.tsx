@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CreditCard } from "lucide-react";
+import { CreditCard, BadgeIndianRupee } from "lucide-react";
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
@@ -41,8 +41,10 @@ const CheckoutPage = () => {
     cardNumber: "",
     expiry: "",
     cvv: "",
+    upiId: "",
   });
   
+  const [paymentMethod, setPaymentMethod] = useState("creditCard");
   const [deliveryOption, setDeliveryOption] = useState("standard");
   
   if (cart.length === 0) {
@@ -88,6 +90,10 @@ const CheckoutPage = () => {
       const formatted = value.replace(/\D/g, "").slice(0, 6);
       setFormData({ ...formData, [name]: formatted });
     }
+    // Format UPI ID with validation
+    else if (name === "upiId") {
+      setFormData({ ...formData, [name]: value });
+    }
     else {
       setFormData({ ...formData, [name]: value });
     }
@@ -106,13 +112,51 @@ const CheckoutPage = () => {
     return totalPrice + calculateTax() + calculateDeliveryFee();
   };
   
+  const validatePaymentInfo = () => {
+    if (paymentMethod === "creditCard") {
+      // Check if card number is valid (simple validation)
+      if (formData.cardNumber.replace(/\s/g, "").length !== 16) {
+        toast.error("Please enter a valid 16-digit card number");
+        return false;
+      }
+      
+      // Check if CVV is valid
+      if (formData.cvv.length < 3) {
+        toast.error("Please enter a valid CVV");
+        return false;
+      }
+      
+      // Check if expiry date is valid
+      const [month, year] = formData.expiry.split("/");
+      if (!month || !year || parseInt(month) < 1 || parseInt(month) > 12) {
+        toast.error("Please enter a valid expiry date");
+        return false;
+      }
+    } 
+    else if (paymentMethod === "upi") {
+      // Simple UPI validation
+      if (!formData.upiId || !formData.upiId.includes("@")) {
+        toast.error("Please enter a valid UPI ID (e.g. name@upi)");
+        return false;
+      }
+    }
+    else if (paymentMethod === "netBanking") {
+      // Simplified validation for demonstration
+      if (!formData.fullName) {
+        toast.error("Please enter account holder name");
+        return false;
+      }
+    }
+    
+    return true;
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Form validation
     const requiredFields = [
-      "fullName", "email", "phone", "address", "city", "state", "pincode", 
-      "cardName", "cardNumber", "expiry", "cvv"
+      "fullName", "email", "phone", "address", "city", "state", "pincode"
     ];
     
     const invalidFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
@@ -122,22 +166,8 @@ const CheckoutPage = () => {
       return;
     }
     
-    // Check if card number is valid (simple validation)
-    if (formData.cardNumber.replace(/\s/g, "").length !== 16) {
-      toast.error("Please enter a valid 16-digit card number");
-      return;
-    }
-    
-    // Check if CVV is valid
-    if (formData.cvv.length < 3) {
-      toast.error("Please enter a valid CVV");
-      return;
-    }
-    
-    // Check if expiry date is valid
-    const [month, year] = formData.expiry.split("/");
-    if (!month || !year || parseInt(month) < 1 || parseInt(month) > 12) {
-      toast.error("Please enter a valid expiry date");
+    // Payment method validation
+    if (!validatePaymentInfo()) {
       return;
     }
     
@@ -290,59 +320,151 @@ const CheckoutPage = () => {
               </div>
             </div>
             
-            {/* Payment Information */}
+            {/* Payment Method Selection */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Payment Method</h2>
+              
+              <div className="flex flex-col md:flex-row gap-3">
+                <label className={`flex-1 flex items-center border rounded-lg p-4 cursor-pointer ${paymentMethod === 'creditCard' ? 'border-primary bg-primary/5' : ''}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="creditCard"
+                    className="mt-1"
+                    checked={paymentMethod === "creditCard"}
+                    onChange={() => setPaymentMethod("creditCard")}
+                  />
+                  <div className="ml-3 flex items-center space-x-2">
+                    <CreditCard className="h-5 w-5" />
+                    <span>Credit / Debit Card</span>
+                  </div>
+                </label>
+                
+                <label className={`flex-1 flex items-center border rounded-lg p-4 cursor-pointer ${paymentMethod === 'upi' ? 'border-primary bg-primary/5' : ''}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="upi"
+                    className="mt-1"
+                    checked={paymentMethod === "upi"}
+                    onChange={() => setPaymentMethod("upi")}
+                  />
+                  <div className="ml-3 flex items-center space-x-2">
+                    <BadgeIndianRupee className="h-5 w-5" />
+                    <span>UPI</span>
+                  </div>
+                </label>
+                
+                <label className={`flex-1 flex items-center border rounded-lg p-4 cursor-pointer ${paymentMethod === 'netBanking' ? 'border-primary bg-primary/5' : ''}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="netBanking"
+                    className="mt-1"
+                    checked={paymentMethod === "netBanking"}
+                    onChange={() => setPaymentMethod("netBanking")}
+                  />
+                  <div className="ml-3">
+                    <span>Net Banking</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+            
+            {/* Payment Information based on selected method */}
             <div className="space-y-6">
               <h2 className="text-xl font-semibold">Payment Information</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="cardName">Name on Card *</Label>
-                  <Input
-                    id="cardName"
-                    name="cardName"
-                    value={formData.cardName}
-                    onChange={handleInputChange}
-                    required
-                  />
+              {paymentMethod === "creditCard" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="cardName">Name on Card *</Label>
+                    <Input
+                      id="cardName"
+                      name="cardName"
+                      value={formData.cardName}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="cardNumber">Card Number *</Label>
+                    <Input
+                      id="cardNumber"
+                      name="cardNumber"
+                      placeholder="XXXX XXXX XXXX XXXX"
+                      value={formData.cardNumber}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="expiry">Expiry Date (MM/YY) *</Label>
+                    <Input
+                      id="expiry"
+                      name="expiry"
+                      placeholder="MM/YY"
+                      value={formData.expiry}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cvv">CVV *</Label>
+                    <Input
+                      id="cvv"
+                      name="cvv"
+                      type="password"
+                      placeholder="XXX"
+                      value={formData.cvv}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
                 </div>
-                
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="cardNumber">Card Number *</Label>
-                  <Input
-                    id="cardNumber"
-                    name="cardNumber"
-                    placeholder="XXXX XXXX XXXX XXXX"
-                    value={formData.cardNumber}
-                    onChange={handleInputChange}
-                    required
-                  />
+              )}
+              
+              {paymentMethod === "upi" && (
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="upiId">UPI ID *</Label>
+                    <Input
+                      id="upiId"
+                      name="upiId"
+                      placeholder="name@upi"
+                      value={formData.upiId}
+                      onChange={handleInputChange}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Example: yourname@okaxis, yourname@ybl, yourname@paytm
+                    </p>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="expiry">Expiry Date (MM/YY) *</Label>
-                  <Input
-                    id="expiry"
-                    name="expiry"
-                    placeholder="MM/YY"
-                    value={formData.expiry}
-                    onChange={handleInputChange}
-                    required
-                  />
+              )}
+              
+              {paymentMethod === "netBanking" && (
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankSelect">Select Bank *</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your bank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sbi">State Bank of India</SelectItem>
+                        <SelectItem value="hdfc">HDFC Bank</SelectItem>
+                        <SelectItem value="icici">ICICI Bank</SelectItem>
+                        <SelectItem value="axis">Axis Bank</SelectItem>
+                        <SelectItem value="kotak">Kotak Mahindra Bank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="cvv">CVV *</Label>
-                  <Input
-                    id="cvv"
-                    name="cvv"
-                    type="password"
-                    placeholder="XXX"
-                    value={formData.cvv}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
+              )}
             </div>
             
             <div className="pt-4 border-t lg:hidden">
@@ -383,7 +505,13 @@ const CheckoutPage = () => {
                 </span>
               ) : (
                 <span className="flex items-center">
-                  <CreditCard className="mr-2 h-4 w-4" />
+                  {paymentMethod === "creditCard" ? (
+                    <CreditCard className="mr-2 h-4 w-4" />
+                  ) : paymentMethod === "upi" ? (
+                    <BadgeIndianRupee className="mr-2 h-4 w-4" />
+                  ) : (
+                    <BadgeIndianRupee className="mr-2 h-4 w-4" />
+                  )}
                   Pay {formatPrice(calculateTotal())}
                 </span>
               )}
